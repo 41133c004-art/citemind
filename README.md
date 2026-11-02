@@ -1,5 +1,5 @@
 # CiteMind – Local RAG Study Companion
-
+**Live App:** [click here to open the app](https://citemind-2uzgd54edwpso9xnvkgjtm.streamlit.app/) 
 **Upload your lecture notes or PDFs → Ask questions → Get answers that are grounded in your materials and always cite the source.**
 
 CiteMind is a lightweight Retrieval-Augmented Generation (RAG) tool designed for students. It keeps your documents private (embeddings and search run fully locally) and only sends the retrieved passages + question to a fast free LLM for the final answer.
