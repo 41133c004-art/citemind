@@ -5,11 +5,9 @@ Upload PDFs → Ask questions → Get answers grounded in your materials with ci
 
 import streamlit as st
 import os
-import tempfile
 from typing import List, Tuple
 import numpy as np
 
-# Lazy imports to speed up startup
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 import faiss
@@ -89,7 +87,7 @@ def generate_answer_with_groq(
     api_key: str,
     model_name: str = "llama-3.3-70b-versatile",
 ) -> str:
-    """Generate a grounded answer using Groq (free tier available)."""
+    """Generate a grounded answer using Groq."""
     from groq import Groq
 
     client = Groq(api_key=api_key)
@@ -135,12 +133,24 @@ with st.sidebar:
     st.markdown("---")
 
     st.subheader("🔑 API Key")
-    groq_key = st.text_input(
-        "Groq API Key",
-        type="password",
-        help="Get a free key at https://console.groq.com (very fast & free tier)",
-        value=os.getenv("GROQ_API_KEY", ""),
-    )
+
+    # ---------- OPTION B: Try to get key from Streamlit secrets first ----------
+    groq_key = ""
+    try:
+        groq_key = st.secrets["GROQ_API_KEY"]
+    except Exception:
+        pass
+
+    # If no secret is found, show the input box (useful for local testing)
+    if not groq_key:
+        groq_key = st.text_input(
+            "Groq API Key",
+            type="password",
+            help="Get a free key at https://console.groq.com",
+            value=os.getenv("GROQ_API_KEY", ""),
+        )
+    else:
+        st.success("API key loaded from secrets ✓")
 
     st.subheader("⚙️ Retrieval Settings")
     top_k = st.slider("Number of chunks to retrieve", 2, 8, 4)
@@ -157,7 +167,7 @@ with st.sidebar:
         """
     )
     st.markdown("---")
-    st.caption("Made for midterm project • No data leaves your machine except the LLM call")
+    st.caption("Made for midterm project • Embeddings stay local")
 
 
 # ---------------------------------------------------------------------------
@@ -217,7 +227,7 @@ else:
 
     if st.button("Get Answer", type="primary") and query.strip():
         if not groq_key:
-            st.error("Please enter your Groq API key in the sidebar (free at console.groq.com).")
+            st.error("Please enter your Groq API key in the sidebar (or set it in Streamlit secrets).")
         else:
             with st.spinner("Retrieving relevant passages and generating answer…"):
                 results = retrieve(
@@ -241,11 +251,10 @@ else:
                             st.markdown("---")
                 except Exception as e:
                     st.error(f"Error calling Groq: {e}")
-                    st.info("Make sure your API key is valid and you have remaining free credits.")
+                    st.info("Make sure your API key is valid.")
 
 # Footer
 st.markdown("---")
 st.caption(
-    "CiteMind • Local embeddings (all-MiniLM-L6-v2) + FAISS • Generation via Groq • "
-    "Your documents never leave this machine except for the final generation call."
+    "CiteMind • Local embeddings (all-MiniLM-L6-v2) + FAISS • Generation via Groq"
 )
